@@ -15,6 +15,8 @@
         app:finishedColor="#000000"
         app:unfinishedColor="#FFFFFF"
         app:paintStroke="10sp"
+        app:start_angle="0"
+        app:clockwise="false"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"

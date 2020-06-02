@@ -17,7 +17,7 @@ import com.hanjx.ui.countdownview.R;
 
 public class CountDownView extends View {
     private static final int LENGTH_DEFAULT = SizeUtils.dp2px(30);
-    private static final int START_ANGLE_DEFAULT = -90;
+    private static final int DEFAULT_START_ANGLE = -90;
     private static final int DEFAULT_DURATION = 2000;
     private static final int DEFAULT_INTERVAL = 16;
     private static final int DEFAULT_FINISHED_COLOR = 0xFF0000FF;
@@ -27,6 +27,9 @@ public class CountDownView extends View {
     private float width;
     private float height;
     private float length;
+
+    private boolean clockwise;
+    private float startAngle;
 
     private int finishedColor;
     private int unfinishedColor;
@@ -56,6 +59,8 @@ public class CountDownView extends View {
         finishedColor = a.getColor(R.styleable.CountDownView_finishedColor, DEFAULT_FINISHED_COLOR);
         unfinishedColor = a.getColor(R.styleable.CountDownView_unfinishedColor, DEFAULT_UNFINISHED_COLOR);
         strokeWidth = a.getDimension(R.styleable.CountDownView_paintStroke, DEFAULT_STROKE);
+        startAngle = a.getFloat(R.styleable.CountDownView_start_angle, DEFAULT_START_ANGLE);
+        clockwise = a.getBoolean(R.styleable.CountDownView_clockwise, true);
         a.recycle();
 
         initPaint();
@@ -94,12 +99,14 @@ public class CountDownView extends View {
         float bottom = top + length - strokeWidth;
         oval.set(left, top, right, bottom);
 
+        float finishedStart = clockwise ? startAngle : startAngle - finishedAngle;
+        float unfinishedStart = clockwise ? startAngle + finishedAngle : startAngle;
+
         circlePaint.setColor(finishedColor);
-        canvas.drawArc(oval, START_ANGLE_DEFAULT, finishedAngle, false, circlePaint);
+        canvas.drawArc(oval, finishedStart, finishedAngle, false, circlePaint);
 
         circlePaint.setColor(unfinishedColor);
-        canvas.drawArc(oval, START_ANGLE_DEFAULT + finishedAngle,
-                360 - finishedAngle, false, circlePaint);
+        canvas.drawArc(oval, unfinishedStart, 360 - finishedAngle, false, circlePaint);
     }
 
     public void start() {

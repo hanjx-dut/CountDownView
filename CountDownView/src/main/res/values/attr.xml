@@ -11,5 +11,7 @@
         <attr name="paintStroke" format="dimension"/>
         <attr name="finishedColor" format="color"/>
         <attr name="unfinishedColor" format="color"/>
+        <attr name="start_angle" format="float"/>
+        <attr name="clockwise" format="boolean"/>
     </declare-styleable>
 </resources>
