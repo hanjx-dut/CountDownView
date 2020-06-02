@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CountDownView">
+        <attr name="padding" format="dimension"/>
+        <attr name="duration" format="integer"/>
+        <attr name="refresh_interval">
+            <enum name="normal" value="16"/>
+            <enum name="quick" value="11"/>
+            <enum name="slow" value="20"/>
+        </attr>
+        <attr name="paintStroke" format="dimension"/>
+        <attr name="finishedColor" format="color"/>
+        <attr name="unfinishedColor" format="color"/>
+    </declare-styleable>
+</resources>

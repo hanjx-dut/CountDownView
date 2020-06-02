@@ -1,6 +1,7 @@
 package com.hanjx.ui;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
@@ -12,31 +13,32 @@ import android.view.ViewGroup;
 import androidx.annotation.Nullable;
 
 import com.blankj.utilcode.util.SizeUtils;
+import com.hanjx.ui.countdownview.R;
 
 public class CountDownView extends View {
     private static final int LENGTH_DEFAULT = SizeUtils.dp2px(30);
     private static final int START_ANGLE_DEFAULT = -90;
-    private static final int DURATION_DEFAULT = 2000;
-    private static final int INTERVAL_DEFAULT = 16;
-    private static final int INTERVAL_HIGH_ACCURACY = 11;
-    private static final int INTERVAL_LOW_ACCURACY = 20;
-    private static final int COLOR_FINISHED_DEFAULT = 0xFF00FF00;
-    private static final int COLOR_UNFINISHED_DEFAULT = 0xFFFF0000;
+    private static final int DEFAULT_DURATION = 2000;
+    private static final int DEFAULT_INTERVAL = 16;
+    private static final int DEFAULT_FINISHED_COLOR = 0xFF0000FF;
+    private static final int DEFAULT_UNFINISHED_COLOR = 0x00000000;
+    private static final int DEFAULT_STROKE = SizeUtils.dp2px(3);
 
-    private int width;
-    private int height;
-    private int length;
+    private float width;
+    private float height;
+    private float length;
 
-    private int colorFinished;
-    private int colorUnfinished;
-    private int strokeWidth = SizeUtils.dp2px(3);
+    private int finishedColor;
+    private int unfinishedColor;
+    private float strokeWidth;
 
     private Paint circlePaint;
     private RectF oval = new RectF();
 
+    private int duration;
+    private int interval;
     private int finishedAngle;
     private CountDownTimer timer;
-    private int interval;
 
     public CountDownView(Context context) {
         this(context, null);
@@ -48,12 +50,18 @@ public class CountDownView extends View {
 
     public CountDownView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CountDownView);
+        duration = a.getInteger(R.styleable.CountDownView_duration, DEFAULT_DURATION);
+        interval = a.getInteger(R.styleable.CountDownView_refresh_interval, DEFAULT_INTERVAL);
+        finishedColor = a.getColor(R.styleable.CountDownView_finishedColor, DEFAULT_FINISHED_COLOR);
+        unfinishedColor = a.getColor(R.styleable.CountDownView_unfinishedColor, DEFAULT_UNFINISHED_COLOR);
+        strokeWidth = a.getDimension(R.styleable.CountDownView_paintStroke, DEFAULT_STROKE);
+        a.recycle();
+
         initPaint();
     }
 
     private void initPaint() {
-        colorFinished = COLOR_FINISHED_DEFAULT;
-        colorUnfinished = COLOR_UNFINISHED_DEFAULT;
         circlePaint = new Paint();
         circlePaint.setAntiAlias(true);
         circlePaint.setStyle(Paint.Style.STROKE);
@@ -80,27 +88,28 @@ public class CountDownView extends View {
         height = getMeasuredHeight();
         length = Math.min(width, height);
 
-        int left = (width - length) / 2 + strokeWidth / 2;
-        int right = left + length - strokeWidth;
-        int top = (height - length) / 2 + strokeWidth / 2;
-        int bottom = top + length - strokeWidth;
+        float left = (width - length) / 2 + strokeWidth / 2;
+        float right = left + length - strokeWidth;
+        float top = (height - length) / 2 + strokeWidth / 2;
+        float bottom = top + length - strokeWidth;
         oval.set(left, top, right, bottom);
 
-        circlePaint.setColor(colorFinished);
+        circlePaint.setColor(finishedColor);
         canvas.drawArc(oval, START_ANGLE_DEFAULT, finishedAngle, false, circlePaint);
 
-        circlePaint.setColor(colorUnfinished);
-        canvas.drawArc(oval, START_ANGLE_DEFAULT + finishedAngle, 360 - finishedAngle, false, circlePaint);
+        circlePaint.setColor(unfinishedColor);
+        canvas.drawArc(oval, START_ANGLE_DEFAULT + finishedAngle,
+                360 - finishedAngle, false, circlePaint);
     }
 
     public void start() {
         if (timer != null) {
             timer.cancel();
         }
-        timer = new CountDownTimer(DURATION_DEFAULT, INTERVAL_DEFAULT) {
+        timer = new CountDownTimer(duration, interval) {
             @Override
             public void onTick(long millisUntilFinished) {
-                finishedAngle = Math.round(360 - 360f * millisUntilFinished / DURATION_DEFAULT);
+                finishedAngle = Math.round(360 - 360f * millisUntilFinished / duration);
                 invalidate();
             }
 
