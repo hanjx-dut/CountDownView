@@ -14,25 +14,35 @@ import androidx.annotation.Nullable;
 
 import com.blankj.utilcode.util.SizeUtils;
 import com.hanjx.ui.countdownview.R;
+import com.hanjx.util.MathUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CountDownView extends View {
-    private static final int LENGTH_DEFAULT = SizeUtils.dp2px(30);
+    private static final int DEFAULT_LENGTH = SizeUtils.dp2px(30);
     private static final int DEFAULT_START_ANGLE = -90;
     private static final int DEFAULT_DURATION = 2000;
     private static final int DEFAULT_INTERVAL = 16;
-    private static final int DEFAULT_FINISHED_COLOR = 0xFF0000FF;
+    private static final int DEFAULT_FINISHED_COLOR = 0xFF3C7CFC;
     private static final int DEFAULT_UNFINISHED_COLOR = 0x00000000;
     private static final int DEFAULT_STROKE = SizeUtils.dp2px(3);
 
     private float width;
     private float height;
     private float length;
+    private int padding;
 
+    // 是否顺时针旋转，默认true
     private boolean clockwise;
+    // 初始角度，默认 -90 即顶部
     private float startAngle;
 
+    // 完成的颜色
     private int finishedColor;
+    // 未完成的颜色
     private int unfinishedColor;
+    // 圆环宽度
     private float strokeWidth;
 
     private Paint circlePaint;
@@ -58,10 +68,27 @@ public class CountDownView extends View {
         interval = a.getInteger(R.styleable.CountDownView_refresh_interval, DEFAULT_INTERVAL);
         finishedColor = a.getColor(R.styleable.CountDownView_finishedColor, DEFAULT_FINISHED_COLOR);
         unfinishedColor = a.getColor(R.styleable.CountDownView_unfinishedColor, DEFAULT_UNFINISHED_COLOR);
-        strokeWidth = a.getDimension(R.styleable.CountDownView_paintStroke, DEFAULT_STROKE);
+        strokeWidth = a.getDimensionPixelSize(R.styleable.CountDownView_paintStroke, DEFAULT_STROKE);
         startAngle = a.getFloat(R.styleable.CountDownView_start_angle, DEFAULT_START_ANGLE);
         clockwise = a.getBoolean(R.styleable.CountDownView_clockwise, true);
         a.recycle();
+
+        int[] paddingAttr = new int[] {
+                android.R.attr.padding,
+                android.R.attr.paddingLeft,
+                android.R.attr.paddingTop,
+                android.R.attr.paddingBottom,
+                android.R.attr.paddingRight,
+                android.R.attr.paddingStart,
+                android.R.attr.paddingEnd
+        };
+        TypedArray pa = context.obtainStyledAttributes(attrs, paddingAttr);
+        List<Integer> paddingList = new ArrayList<>();
+        for (int i = 0; i < paddingAttr.length; i++) {
+            paddingList.add(pa.getDimensionPixelSize(i, 0));
+        }
+        padding = MathUtils.max(paddingList);
+        pa.recycle();
 
         initPaint();
     }
@@ -75,10 +102,11 @@ public class CountDownView extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        // 默认宽高 30dp
         int widthSpec = getLayoutParams().width == ViewGroup.LayoutParams.WRAP_CONTENT ?
-                MeasureSpec.makeMeasureSpec(LENGTH_DEFAULT, MeasureSpec.EXACTLY) : widthMeasureSpec;
+                MeasureSpec.makeMeasureSpec(DEFAULT_LENGTH, MeasureSpec.EXACTLY) : widthMeasureSpec;
         int heightSpec = getLayoutParams().height == ViewGroup.LayoutParams.WRAP_CONTENT ?
-                MeasureSpec.makeMeasureSpec(LENGTH_DEFAULT, MeasureSpec.EXACTLY) : heightMeasureSpec;
+                MeasureSpec.makeMeasureSpec(DEFAULT_LENGTH, MeasureSpec.EXACTLY) : heightMeasureSpec;
 
         width = MeasureSpec.getSize(widthSpec);
         height = MeasureSpec.getSize(heightSpec);
@@ -92,11 +120,12 @@ public class CountDownView extends View {
         width = getMeasuredWidth();
         height = getMeasuredHeight();
         length = Math.min(width, height);
+        strokeWidth = Math.max(strokeWidth, length / 2f);
 
-        float left = (width - length) / 2 + strokeWidth / 2;
-        float right = left + length - strokeWidth;
-        float top = (height - length) / 2 + strokeWidth / 2;
-        float bottom = top + length - strokeWidth;
+        float left = (width - length + strokeWidth) / 2f + padding;
+        float right = (width + length - strokeWidth) / 2f - padding;
+        float top = (height - length + strokeWidth) / 2f + padding;
+        float bottom = (height + length - strokeWidth) / 2f - padding;
         oval.set(left, top, right, bottom);
 
         float finishedStart = clockwise ? startAngle : startAngle - finishedAngle;
