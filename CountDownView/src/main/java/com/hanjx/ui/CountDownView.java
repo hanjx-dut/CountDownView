@@ -20,13 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CountDownView extends View {
-    private static final int DEFAULT_LENGTH = SizeUtils.dp2px(30);
+    private static final int DEFAULT_LENGTH = SizeUtils.dp2px(60);
     private static final int DEFAULT_START_ANGLE = -90;
     private static final int DEFAULT_DURATION = 2000;
     private static final int DEFAULT_INTERVAL = 16;
     private static final int DEFAULT_FINISHED_COLOR = 0xFF3C7CFC;
     private static final int DEFAULT_UNFINISHED_COLOR = 0x00000000;
     private static final int DEFAULT_STROKE = SizeUtils.dp2px(3);
+    private static final int DEFAULT_TEXT_COLOR = 0xFF3C7CFC;
+    private static final int DEFAULT_TEXT_SIZE = SizeUtils.sp2px(15);
+    private static final int MODE_FIXED = 0;
+    private static final int MODE_TIME_VARIANT = 1;
 
     private float width;
     private float height;
@@ -37,7 +41,6 @@ public class CountDownView extends View {
     private boolean clockwise;
     // 初始角度，默认 -90 即顶部
     private float startAngle;
-
     // 完成的颜色
     private int finishedColor;
     // 未完成的颜色
@@ -48,13 +51,29 @@ public class CountDownView extends View {
     private Paint circlePaint;
     private RectF oval = new RectF();
 
+    // 文字内容
+    private String text;
+    // 文字显示模式
+    private int textMode;
+    // 文字颜色
+    private int textColor;
+    // 文字大小
+    private int textSize;
+
+    private Paint textPaint;
+    private TextDrawer textDrawer;
+
     // 自动开始
     private boolean autoStart;
     // 总时间
     private int duration;
-    // 刷新间隔 fast:11ms, normal:16ms, slow:20ms
+    // 剩余时间
+    private int leftTime;
+    // 刷新间隔
     private int interval;
+    // 完成角度
     private int finishedAngle;
+
     private CountDownTimer timer;
 
     private CountDownListener listener;
@@ -78,6 +97,13 @@ public class CountDownView extends View {
         startAngle = a.getFloat(R.styleable.CountDownView_start_angle, DEFAULT_START_ANGLE);
         clockwise = a.getBoolean(R.styleable.CountDownView_clockwise, true);
         autoStart = a.getBoolean(R.styleable.CountDownView_auto_start, false);
+        text = a.getString(R.styleable.CountDownView_text);
+        if (text == null) {
+            text = "";
+        }
+        textColor = a.getColor(R.styleable.CountDownView_text_color, DEFAULT_TEXT_COLOR);
+        textSize = a.getDimensionPixelSize(R.styleable.CountDownView_text_size, DEFAULT_TEXT_SIZE);
+        textMode = a.getInteger(R.styleable.CountDownView_text_mode, MODE_TIME_VARIANT);
         a.recycle();
 
         int[] paddingAttr = new int[] {
@@ -98,6 +124,8 @@ public class CountDownView extends View {
         pa.recycle();
 
         initPaint();
+        textDrawer = new TextDrawer() { };
+
         if (autoStart) {
             post(this::start);
         }
@@ -108,6 +136,10 @@ public class CountDownView extends View {
         circlePaint.setAntiAlias(true);
         circlePaint.setStyle(Paint.Style.STROKE);
         circlePaint.setStrokeWidth(strokeWidth);
+
+        textPaint = new Paint();
+        textPaint.setTextSize(textSize);
+        textPaint.setColor(textColor);
     }
 
     public void start() {
@@ -115,13 +147,15 @@ public class CountDownView extends View {
     }
 
     public void start(int duration) {
-        this.duration = duration;
         if (timer != null) {
             timer.cancel();
         }
+
+        this.duration = duration;
         timer = new CountDownTimer(duration, interval) {
             @Override
             public void onTick(long millisUntilFinished) {
+                leftTime = (int) millisUntilFinished;
                 finishedAngle = Math.round(360 - 360f * millisUntilFinished / duration);
                 invalidate();
                 if (listener != null) {
@@ -131,6 +165,7 @@ public class CountDownView extends View {
 
             @Override
             public void onFinish() {
+                leftTime = 0;
                 finishedAngle = 360;
                 invalidate();
                 if (listener != null) {
@@ -162,7 +197,7 @@ public class CountDownView extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        // 默认宽高 30dp
+        // 默认宽高 60dp
         int widthSpec = getLayoutParams().width == ViewGroup.LayoutParams.WRAP_CONTENT ?
                 MeasureSpec.makeMeasureSpec(DEFAULT_LENGTH, MeasureSpec.EXACTLY) : widthMeasureSpec;
         int heightSpec = getLayoutParams().height == ViewGroup.LayoutParams.WRAP_CONTENT ?
@@ -196,6 +231,13 @@ public class CountDownView extends View {
 
         circlePaint.setColor(unfinishedColor);
         canvas.drawArc(oval, unfinishedStart, 360 - finishedAngle, false, circlePaint);
+
+        textDrawer.setTextPaint(textPaint, leftTime, textMode);
+        text = textDrawer.getText(leftTime, textMode, text);
+        float textWidth = textPaint.measureText(text);
+        float textX = (left + right - textWidth) / 2;
+        float textY = (top + bottom) / 2 + Math.abs(textPaint.descent() + textPaint.ascent()) / 2;
+        canvas.drawText(text, textX, textY, textPaint);
     }
 
     @Override
@@ -263,9 +305,23 @@ public class CountDownView extends View {
         return this;
     }
 
+    public CountDownView setTextDrawer(TextDrawer textDrawer) {
+        this.textDrawer = textDrawer;
+        return this;
+    }
+
     public interface CountDownListener {
         default void onTick(long leftTime, float finishedAngle) { }
         default void onStop(boolean reset) { }
         default void onFinished() { }
+    }
+
+    public interface TextDrawer {
+        default void setTextPaint(Paint paint, long leftTime, int mode) { }
+
+        default String getText(long leftTime, int mode, String originText) {
+            return mode == MODE_TIME_VARIANT ?
+                    String.valueOf(leftTime == 0 ? leftTime : leftTime / 1000 + 1) : originText;
+        }
     }
 }

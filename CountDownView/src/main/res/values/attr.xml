@@ -13,5 +13,14 @@
         <attr name="start_angle" format="float"/>  <!-- 起始角度 默认 -90 即顶部 -->
         <attr name="clockwise" format="boolean"/>  <!-- 顺时针 默认 true -->
         <attr name="auto_start" format="boolean"/>  <!-- 自动开始 默认 false -->
+
+        <!-- 文字 -->
+        <attr name="text" format="string"/>  <!-- 设置文字 -->
+        <attr name="text_mode">  <!-- 文字模式 固定 / 随时间倒数（默认）-->
+            <enum name="fixed" value="0"/>
+            <enum name="time_variant" value="1"/>
+        </attr>
+        <attr name="text_size" format="dimension"/>  <!-- 文字尺寸 -->
+        <attr name="text_color" format="color"/>  <!-- 文字颜色 -->
     </declare-styleable>
 </resources>
