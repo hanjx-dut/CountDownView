@@ -36,6 +36,22 @@ public class MainActivity extends AppCompatActivity {
                 return String.format("%ss", leftTime == 0 ? leftTime : leftTime / 1000 + 1);
             }
         });
+        countDownView.setCountDownListener(new CountDownView.CountDownListener() {
+            @Override
+            public void onTick(long leftTime, float finishedAngle) {
+
+            }
+
+            @Override
+            public void onStop(boolean reset) {
+
+            }
+
+            @Override
+            public void onFinished() {
+
+            }
+        });
         countDownView.post(countDownView::start);
 
         View reset = findViewById(R.id.reset);
