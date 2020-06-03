@@ -72,9 +72,9 @@ public class CountDownView extends View {
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CountDownView);
         duration = a.getInteger(R.styleable.CountDownView_duration, DEFAULT_DURATION);
         interval = a.getInteger(R.styleable.CountDownView_refresh_interval, DEFAULT_INTERVAL);
-        finishedColor = a.getColor(R.styleable.CountDownView_finishedColor, DEFAULT_FINISHED_COLOR);
-        unfinishedColor = a.getColor(R.styleable.CountDownView_unfinishedColor, DEFAULT_UNFINISHED_COLOR);
-        strokeWidth = a.getDimensionPixelSize(R.styleable.CountDownView_paintStroke, DEFAULT_STROKE);
+        finishedColor = a.getColor(R.styleable.CountDownView_finished_color, DEFAULT_FINISHED_COLOR);
+        unfinishedColor = a.getColor(R.styleable.CountDownView_unfinished_color, DEFAULT_UNFINISHED_COLOR);
+        strokeWidth = a.getDimensionPixelSize(R.styleable.CountDownView_paint_stroke, DEFAULT_STROKE);
         startAngle = a.getFloat(R.styleable.CountDownView_start_angle, DEFAULT_START_ANGLE);
         clockwise = a.getBoolean(R.styleable.CountDownView_clockwise, true);
         autoStart = a.getBoolean(R.styleable.CountDownView_auto_start, false);
