@@ -10,7 +10,7 @@ allprojects {
 }
 
 dependencies {
-    implementation 'com.github.hanjx-dut:CountDownView:1.0'
+    implementation 'com.github.hanjx-dut:CountDownView:1.1'
 }
 ```
 
