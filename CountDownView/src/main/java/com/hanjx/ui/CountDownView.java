@@ -48,10 +48,16 @@ public class CountDownView extends View {
     private Paint circlePaint;
     private RectF oval = new RectF();
 
+    // 自动开始
+    private boolean autoStart;
+    // 总时间
     private int duration;
+    // 刷新间隔 fast:11ms, normal:16ms, slow:20ms
     private int interval;
     private int finishedAngle;
     private CountDownTimer timer;
+
+    private CountDownListener listener;
 
     public CountDownView(Context context) {
         this(context, null);
@@ -71,6 +77,7 @@ public class CountDownView extends View {
         strokeWidth = a.getDimensionPixelSize(R.styleable.CountDownView_paintStroke, DEFAULT_STROKE);
         startAngle = a.getFloat(R.styleable.CountDownView_start_angle, DEFAULT_START_ANGLE);
         clockwise = a.getBoolean(R.styleable.CountDownView_clockwise, true);
+        autoStart = a.getBoolean(R.styleable.CountDownView_auto_start, false);
         a.recycle();
 
         int[] paddingAttr = new int[] {
@@ -91,6 +98,9 @@ public class CountDownView extends View {
         pa.recycle();
 
         initPaint();
+        if (autoStart) {
+            post(this::start);
+        }
     }
 
     private void initPaint() {
@@ -98,6 +108,56 @@ public class CountDownView extends View {
         circlePaint.setAntiAlias(true);
         circlePaint.setStyle(Paint.Style.STROKE);
         circlePaint.setStrokeWidth(strokeWidth);
+    }
+
+    public void start() {
+        start(duration);
+    }
+
+    public void start(int duration) {
+        this.duration = duration;
+        if (timer != null) {
+            timer.cancel();
+        }
+        timer = new CountDownTimer(duration, interval) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                finishedAngle = Math.round(360 - 360f * millisUntilFinished / duration);
+                invalidate();
+                if (listener != null) {
+                    listener.onTick(millisUntilFinished, finishedAngle);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                finishedAngle = 360;
+                invalidate();
+                if (listener != null) {
+                    listener.onFinished();
+                }
+            }
+        };
+        timer.start();
+    }
+
+    public void stop() {
+        stop(true);
+    }
+
+    public void stop(boolean reset) {
+        if (timer != null) {
+            timer.cancel();
+        }
+
+        if (reset) {
+            finishedAngle = 360;
+            invalidate();
+        }
+
+        if (listener != null) {
+            listener.onStop(reset);
+        }
     }
 
     @Override
@@ -138,23 +198,74 @@ public class CountDownView extends View {
         canvas.drawArc(oval, unfinishedStart, 360 - finishedAngle, false, circlePaint);
     }
 
-    public void start() {
-        if (timer != null) {
-            timer.cancel();
+    @Override
+    public void setPadding(int left, int top, int right, int bottom) {
+        int newPadding = MathUtils.max(left, top, right, bottom);
+        if (newPadding != padding) {
+            padding = newPadding;
+            invalidate();
         }
-        timer = new CountDownTimer(duration, interval) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                finishedAngle = Math.round(360 - 360f * millisUntilFinished / duration);
-                invalidate();
-            }
+    }
 
-            @Override
-            public void onFinish() {
-                finishedAngle = 360;
-                invalidate();
-            }
-        };
-        timer.start();
+    public CountDownView setClockwise(boolean clockwise) {
+        this.clockwise = clockwise;
+        return this;
+    }
+
+    public CountDownView setPadding(int padding) {
+        if (this.padding != padding) {
+            this.padding = padding;
+            invalidate();
+        }
+        return this;
+    }
+
+    public CountDownView setStartAngle(float startAngle) {
+        this.startAngle = startAngle;
+        return this;
+    }
+
+    public CountDownView setFinishedColor(int finishedColor) {
+        this.finishedColor = finishedColor;
+        return this;
+    }
+
+    public CountDownView setUnfinishedColor(int unfinishedColor) {
+        this.unfinishedColor = unfinishedColor;
+        return this;
+    }
+
+    public CountDownView setStrokeWidth(float strokeWidth) {
+        this.strokeWidth = strokeWidth;
+        return this;
+    }
+
+    public CountDownView setDuration(int duration) {
+        this.duration = duration;
+        return this;
+    }
+
+    public CountDownView setInterval(int interval) {
+        this.interval = interval;
+        return this;
+    }
+
+    public CountDownView setAutoStart(boolean autoStart) {
+        this.autoStart = autoStart;
+        if (autoStart) {
+            post(this::start);
+        }
+        return this;
+    }
+
+    public CountDownView setCountDownListener(CountDownListener listener) {
+        this.listener = listener;
+        return this;
+    }
+
+    public interface CountDownListener {
+        default void onTick(long leftTime, float finishedAngle) { }
+        default void onStop(boolean reset) { }
+        default void onFinished() { }
     }
 }
